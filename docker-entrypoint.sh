@@ -54,6 +54,8 @@ configure_db_mysql() {
     elif [ -f "/etc/my.cnf.d/server.cnf" ]; then
         MYSQL_CONF_FILE="/etc/my.cnf.d/server.cnf"
         DB_SERVER_SOCKET="/var/lib/mysql/mysql.sock"
+    elif [ -f "/etc/my.cnf" ]; then
+        MYSQL_CONF_FILE="/etc/my.cnf"
     else
         echo "**** Could not found MySQL configuration file"
         exit 1
@@ -86,6 +88,7 @@ configure_db_mysql() {
 
     mkdir -p /var/run/mysqld
     ln -s /var/run/mysqld /run/mysqld
+    ln -s /usr/sbin/php-fpm7 /usr/bin/php-fpm
     chown -R mysql:mysql /var/run/mysqld
     chown -R mysql:mysql /run/mysqld
 
@@ -585,7 +588,7 @@ prepare_web_server_apache() {
 prepare_web_server_nginx() {
     NGINX_CONFD_DIR="/etc/nginx/conf.d"
     NGINX_SSL_CONFIG="/etc/ssl/nginx"
-    PHP_SESSIONS_DIR="/var/lib/php5"
+    PHP_SESSIONS_DIR="/var/lib/php7"
 
     echo "** Disable default vhosts"
     rm -f $NGINX_CONFD_DIR/*.conf
@@ -612,7 +615,7 @@ prepare_web_server_nginx() {
         ln -sf /dev/fd/2 /var/log/nginx/error.log
     fi
 
-    ln -sf /dev/fd/2 /var/log/php5-fpm.log
+    ln -sf /dev/fd/2 /var/log/php7-fpm.log
     ln -sf /dev/fd/2 /var/log/php7.2-fpm.log
 }
 
@@ -856,12 +859,12 @@ prepare_zbx_web_config() {
     ln -s "$ZBX_WEB_CONFIG" "$ZBX_WWW_ROOT/conf/zabbix.conf.php"
 
     # Different places of PHP configuration file
-    if [ -f "/etc/php5/conf.d/99-zabbix.ini" ]; then
-        PHP_CONFIG_FILE="/etc/php5/conf.d/99-zabbix.ini"
-    elif [ -f "/etc/php5/fpm/conf.d/99-zabbix.ini" ]; then
-        PHP_CONFIG_FILE="/etc/php5/fpm/conf.d/99-zabbix.ini"
-    elif [ -f "/etc/php5/apache2/conf.d/99-zabbix.ini" ]; then
-        PHP_CONFIG_FILE="/etc/php5/apache2/conf.d/99-zabbix.ini"
+    if [ -f "/etc/php7/conf.d/99-zabbix.ini" ]; then
+        PHP_CONFIG_FILE="/etc/php7/conf.d/99-zabbix.ini"
+    elif [ -f "/etc/php7/fpm/conf.d/99-zabbix.ini" ]; then
+        PHP_CONFIG_FILE="/etc/php7/fpm/conf.d/99-zabbix.ini"
+    elif [ -f "/etc/php7/apache2/conf.d/99-zabbix.ini" ]; then
+        PHP_CONFIG_FILE="/etc/php7/apache2/conf.d/99-zabbix.ini"
     elif [ -f "/etc/php/7.0/apache2/conf.d/99-zabbix.ini" ]; then
         PHP_CONFIG_FILE="/etc/php/7.0/apache2/conf.d/99-zabbix.ini"
     elif [ -f "/etc/php/7.0/fpm/conf.d/99-zabbix.ini" ]; then

@@ -4,8 +4,8 @@ ARG APK_FLAGS_COMMON=""
 ARG APK_FLAGS_DEV="${APK_FLAGS_COMMON} --no-cache"
 
 ARG MAJOR_VERSION=4.2
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=svn://svn.zabbix.com/${ZBX_VERSION}${ZBX_VERSION}/
+ARG ZBX_VERSION=${MAJOR_VERSION}.1
+ARG ZBX_SOURCES=svn://svn.zabbix.com/tags/${ZBX_VERSION}/
 ENV ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
     PATH=${PATH}:/usr/lib/jvm/default-jvm/bin/ JAVA_HOME=/usr/lib/jvm/default-jvm \
     ZBX_TYPE=server ZBX_DB_TYPE=mysql ZBX_OPT_TYPE=nginx \
@@ -31,8 +31,9 @@ RUN apk add ${APK_FLAGS_DEV} --virtual build-dependencies \
             openldap-dev \
             pcre-dev \
             subversion \
-            unixodbc-dev && \
-    cd /tmp/ && \
+            unixodbc-dev
+
+RUN cd /tmp/ && \
     svn --quiet export ${ZBX_SOURCES} zabbix-${ZBX_VERSION} && \
     cd /tmp/zabbix-${ZBX_VERSION} && \
     zabbix_revision=`svn info ${ZBX_SOURCES} |grep "Last Changed Rev"|awk '{print $4;}'` && \
@@ -63,7 +64,7 @@ RUN apk add ${APK_FLAGS_DEV} --virtual build-dependencies \
             --enable-ipv6 \
             --silent && \
     make -j"$(nproc)" -s dbschema && \
-    make -j"$(nproc)" -s && \
+    make -j"$(nproc)" -s && \ 
     cat database/${ZBX_DB_TYPE}/schema.sql > database/${ZBX_DB_TYPE}/create.sql && \
     cat database/${ZBX_DB_TYPE}/images.sql >> database/${ZBX_DB_TYPE}/create.sql && \
     cat database/${ZBX_DB_TYPE}/data.sql >> database/${ZBX_DB_TYPE}/create.sql && \
@@ -85,9 +86,9 @@ ARG VCS_REF
 ARG APK_FLAGS_COMMON=""
 ARG APK_FLAGS_PERSISTENT="${APK_FLAGS_COMMON} --clean-protected --no-cache"
 
-ARG MAJOR_VERSION=4.0
-ARG ZBX_VERSION=${MAJOR_VERSION}
-ARG ZBX_SOURCES=svn://svn.zabbix.com/trunk/
+ARG MAJOR_VERSION=4.2
+ARG ZBX_VERSION=${MAJOR_VERSION}.1
+ARG ZBX_SOURCES=svn://svn.zabbix.com/tags/${ZBX_VERSION}/
 ENV ZBX_VERSION=${ZBX_VERSION} ZBX_SOURCES=${ZBX_SOURCES} \
     MIBDIRS=/usr/share/snmp/mibs:/var/lib/zabbix/mibs MIBS=+ALL PATH=${PATH}:/usr/lib/jvm/default-jvm/bin/ JAVA_HOME=/usr/lib/jvm/default-jvm \
     ZBX_TYPE=server ZBX_DB_TYPE=mysql ZBX_OPT_TYPE=nginx \
@@ -167,9 +168,13 @@ RUN addgroup zabbix && \
             php7-gettext \
             php7-json \
             php7-ldap \
+            php7-mbstring \
             php7-mysqli \
+            php7-session \
             php7-sockets \
             php7-xmlreader \
+            php7-xmlwriter \
+            sudo \
             supervisor \
             ttf-dejavu \
             pcre \
@@ -190,8 +195,8 @@ COPY ["conf/etc/zabbix/nginx.conf", "/etc/zabbix/"]
 COPY ["conf/etc/zabbix/nginx_ssl.conf", "/etc/zabbix/"]
 COPY ["conf/etc/zabbix/web/zabbix.conf.php", "/etc/zabbix/web/"]
 COPY ["conf/etc/nginx/nginx.conf", "/etc/nginx/"]
-COPY ["conf/etc/php5/php-fpm.conf", "/etc/php7/"]
-COPY ["conf/etc/php5/conf.d/99-zabbix.ini", "/etc/php7/conf.d/"]
+COPY ["conf/etc/php7/php-fpm.conf", "/etc/php7/"]
+COPY ["conf/etc/php7/conf.d/99-zabbix.ini", "/etc/php7/conf.d/"]
 COPY ["conf/etc/zabbix/zabbix_java_gateway_logback.xml", "/etc/zabbix/"]
 COPY ["conf/usr/sbin/zabbix_java_gateway", "/usr/sbin/"]
 COPY ["docker-entrypoint.sh", "/usr/bin/"]
