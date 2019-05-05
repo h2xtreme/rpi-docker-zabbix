@@ -33,7 +33,7 @@
 #
 [Unit]
 Description=Zabbix Docker Container
-Documentatio=https://github.com/h2xtreme/rpi-docker-zabbix
+Documentation=https://github.com/h2xtreme/rpi-docker-zabbix
 After=network.target docker.service
 Requires=docker.service
 
@@ -43,16 +43,15 @@ Restart=always
 
 # Modify IP6_PREFIX to match network config
 #Environment="IP6_PREFIX=2001:db8::/64"
-#Environment="ARGS=--config openvpn.conf --server-ipv6 2001:db8::/64"
 Environment="NAME=zabbix-%i"
 Environment="MYSQL_VOL=zabbix-mysql-%i"
-Environment="vZABBIX_VOL=zabbix-var-%i"
+Environment="VZABBIX_VOL=zabbix-var-%i"
 Environment="UZABBIX_VOL=zabbix-usr-%i"
 Environment="NGINX_VOL=zabbix-nginx-%i"
 Environment="TIMEZONE=Europe/Lisbon"
 Environment="IMG=hferreira/rpi-docker-zabbix:latest"
 Environment="PORT_HTTP=10888:80/tcp"
-Environment="PORT_HTTPs=10443:443/tcp"
+Environment="PORT_HTTPS=10443:443/tcp"
 Environment="PORT_ZABBIX=10051:10051/tcp"
 
 # To override environment variables, use local configuration directory:
@@ -71,7 +70,8 @@ ExecStartPre=-/usr/bin/docker pull $IMG
 ExecStartPre=/bin/sh -c 'test -z "$IP6_PREFIX" && exit 0; sysctl net.ipv6.conf.all.forwarding=1'
 
 # Main process
-ExecStart=/usr/bin/docker run --rm --cap-add=NET_ADMIN -v ${MYSQL_VOL}:/var/lib/mysql -v ${VZABBIX_VOL}:/var/lib/zabbix -v ${UZABBIX_VOL}:/usr/lib/zabbix -v ${NGINX_VOL}:/etc/ssl/nginx --name ${NAME} -p ${PORT_HTTP} -p ${PORT_HTTPS} -p ${PORT_ZABBIX} ${IMG} -e PHP_TZ=${TIMEZONE} -e ZBX_SERVER_NAME=${NAME}
+ExecStart=/usr/bin/docker run --rm --cap-add=NET_ADMIN -v ${MYSQL_VOL}:/var/lib/mysql -v ${VZABBIX_VOL}:/var/lib/zabbix -v ${UZABBIX_VOL}:/usr/lib/zabbix -v ${NGINX_VOL}:/etc/ssl/nginx --name ${NAME} -p ${PORT_HTTP} -p ${PORT_HTTPS} -p ${PORT_ZABBIX} -e PHP_TZ=${TIMEZONE} -e ZBX_SERVER_NAME=${NAME} ${IMG}
+
 
 # IPv6: Add static route for IPv6 after it starts up
 ExecStartPost=/bin/sh -c 'test -z "${IP6_PREFIX}" && exit 0; sleep 1; ip route replace ${IP6_PREFIX} via $(docker inspect -f "{{ .NetworkSettings.GlobalIPv6Address }}" $NAME ) dev docker0'
