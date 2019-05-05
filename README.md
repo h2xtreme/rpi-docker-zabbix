@@ -1,5 +1,11 @@
 ![logo](https://assets.zabbix.com/img/logo/zabbix_logo_500x131.png)
 
+# What's in this Git repo
+
+I have ported the appliance docker container from the official Zabbix account to Raspberry PI
+
+This image is based Alpine + Zabbix 4.2
+
 # What is Zabbix?
 
 Zabbix is an enterprise-class open source distributed monitoring solution.
@@ -12,35 +18,50 @@ For more information and related downloads for Zabbix components, please visit h
 
 Zabbix appliance contains MySQL database server, Zabbix server, Zabbix Java Gateway and Zabbix frontend based on Nginx web-server.
 
-# Zabbix appliance images
-
-These are the only official Zabbix appliance Docker images. They are based on Alpine Linux v3.4, Ubuntu 18.04 (bionic) and CentOS 7 images. The available versions of Zabbix appliance are:
-
-    Zabbix appliance 3.0 (tags: alpine-3.0-latest, ubuntu-3.0-latest, centos-3.0-latest)
-    Zabbix appliance 3.0.* (tags: alpine-3.0.*, ubuntu-3.0.*, centos-3.0.*)
-    Zabbix appliance 3.2 (tags: alpine-3.2-latest, ubuntu-3.2-latest, centos-3.2-latest)
-    Zabbix appliance 3.2.* (tags: alpine-3.2.*, ubuntu-3.2.*, centos-3.2.*)
-    Zabbix appliance 3.4 (tags: alpine-3.4-latest, ubuntu-3.4-latest, centos-3.4-latest)
-    Zabbix appliance 3.4.* (tags: alpine-3.4.*, ubuntu-3.4.*, centos-3.4.*)
-    Zabbix appliance 4.0 (tags: alpine-4.0-latest, ubuntu-4.0-latest, centos-4.0-latest)
-    Zabbix appliance 4.0.* (tags: alpine-4.0.*, ubuntu-4.0.*, centos-4.0.*)
-    Zabbix appliance 4.2 (tags: alpine-4.2-latest, ubuntu-4.2-latest, centos-4.2-latest, alpine-latest, ubuntu-latest, centos-latest, latest)
-    Zabbix appliance 4.2.* (tags: alpine-4.2.*, ubuntu-4.2.*, centos-4.2.*)
-    Zabbix appliance 4.4 (tags: alpine-trunk, ubuntu-trunk, centos-trunk)
-
-Images are updated when new releases are published. The image with ``latest`` tag is based on Alpine Linux.
-
-The image uses MySQL database. The image is very useful for testing purposes.
-
 # How to use this image
 
 ## Start `zabbix-appliance`
 
 Start a Zabbix server container as follows:
 
-    docker run --name some-zabbix-appliance -p 80:80 -p 10051:10051 -d zabbix/zabbix-appliance:tag
+    docker run --name some-zabbix-appliance -p 80:80 -p 10051:10051 -d hferreira/rpi-docker-zabbix:latest
 
 Where `some-zabbix-appliance` is the name you want to assign to your container. See the list above for relevant tags, or look at the [full list of tags](https://hub.docker.com/r/zabbix/zabbix-appliance/tags/).
+
+## Recomended Setup
+
+### Adding systemd support
+
+Download the systemd config and deploy it:
+
+        curl -L https://raw.githubusercontent.com/h2xtreme/rpi-docker-zabbix/master/init/docker-zabbix%40.service | sudo tee /etc/systemd/system/docker-zabbix@.service
+
+Enable and start the service with:
+
+        systemctl enable --now docker-zabbix@example.service
+
+Note: example should be replaced with the desired name. %i is used in the systemd config file to set a number of variables
+
+It will:
+- Pull the latest version of the container from Docker Hub
+- Create all the volumes needed
+- Expose the following ports:
+  - 10888 to 80 tcp
+  - 10443 to 443 tcp
+  - 10051 to 10051 tcp
+- Set the timezone -> Europe/Lisbon by default
+- Set both zabbix instance and zabbix container name
+- Launch the container
+    
+No need to run any docker commands. Systemd handles everything.
+
+You may want to add more Env Variables (see below), in that case edit the systemd config and reload it afterwords:
+
+        systemctl daemon-reload
+      
+To check the logs:
+
+        journalctl -u docker-zabbix@example.service
 
 ## Container shell access and viewing Zabbix appliance logs
 
